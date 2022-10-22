@@ -31,15 +31,9 @@ void init(){
 	}
 }
 
-void beginAlgorithm(){
-	for(int i = 0; i < N; i++){
-		attributeCluster(points[i]);
-	}
-}
-
-void attributeCluster(P point){
+int findCluster(P point){
 	float dist_min = 2; 
-	int j_min = -1;
+	int min = -1;
 
 	for(int j = 0; j < K; j++){
 		float dist, d1, d2;
@@ -49,19 +43,73 @@ void attributeCluster(P point){
 			
 		if (dist < dist_min){
 			dist_min = dist;
-			j_min = j;
+			min = j;
 		}
 	}
-	point-> cluster = j_min;
+
+	return min;
+}
+
+
+void attributeInitialClusters(){
+	for(int i = 0; i < N; i++){
+		points[i]-> cluster = findCluster(points[i]);
+	}
+}
+
+int attributeClusters(){
+	int changed = 0;
+
+	for(int i = 0; i < N; i++){
+		int cluster = findCluster(points[i]);
+		if (!changed && cluster != points[i]-> cluster){
+			changed = 1;
+			points[i]-> cluster = cluster;	
+		}
+		else if (cluster != points[i]-> cluster){
+			points[i]-> cluster = cluster;	
+		}
+	}
+
+	return changed;
+}
+
+void rearrangeCluster(){
+	int size[K];
+	float x[K], y[K];
+	for(int i = 0; i < K; i++){
+		size[i] = 0;
+		x[i] = 0;
+		y[i] = 0;
+	}
+
+	for(int i = 0; i < N; i++){
+		size[points[i]-> cluster]++;
+		x[points[i]-> cluster] += points[i]-> x;
+		y[points[i]-> cluster] += points[i]-> y;
+	}
+
+	for(int i = 0; i < K; i++){
+		clusters[i]-> centroid-> x = x[i] / size[i];
+		clusters[i]-> centroid-> y = y[i] / size[i];
+	}
 }
 
 void algorithm(){
-	int changes;
-	iterations = 0;
-	beginAlgorithm();
-	do{
-		changes = 0;
+	iterations = 1;
+
+	attributeInitialClusters();
+	while(1){
+		rearrangeCluster();
+		if (attributeClusters() == 1){
+			// continuar algoritmo	
+		}
+		else
+			break;
 		iterations++;
 	}
-	while(changes != 0);
+
+	for(int i = 0; i < K; i++){
+		printf("[%d]: %.3f, %.3f", i, clusters[i]-> centroid-> x, clusters[i]-> centroid-> y);
+	}
 }

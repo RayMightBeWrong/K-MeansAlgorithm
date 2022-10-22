@@ -16,8 +16,10 @@ P *points;
 C *clusters;
 
 void init();
-void attributeCluster();
-void beginAlgorithm();
+int  findCluster(P point);
+int  attributeCluster(P point);
+void attributeInitialClusters();
+void rearrangeCluster();
 void algorithm();
 
 #endif
