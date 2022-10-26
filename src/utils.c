@@ -101,10 +101,11 @@ void algorithm(float *px, float *py, float *cx, float *cy, int *point_cluster, i
 	*iterations = 1;
 
 	attributeInitialClusters(px, py, cx, cy, point_cluster);
+	rearrangeCluster(px, py, cx, cy, point_cluster);
 	while(1){
-		//rearrangeCluster(px, py, cx, cy, point_cluster);
 		if (attributeClusters(px, py, cx, cy, point_cluster) == 0)
 			break;
+		//rearrangeCluster(px, py, cx, cy, point_cluster);
 		*iterations += 1;
 	}
 
