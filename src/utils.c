@@ -7,6 +7,8 @@ void init(float *px, float *py, float *cx, float *cy){
 		px[i] = (float) rand() / RAND_MAX;
 		py[i] = (float) rand() / RAND_MAX;
 	}
+
+#pragma omp simd
 	for(int i = 0; i < K; i++){
 		cx[i] = px[i];
 		cy[i] = py[i];
@@ -39,14 +41,6 @@ void attributeInitialClusters(float *px, float *py, float *cx, float *cy, int *p
 }
 
 int attributeClusters(float *px, float *py, float *cx, float *cy, int *point_cluster){
-	int size[K];
-	float x[K], y[K];
-	for(int i = 0; i < K; i++){
-		size[i] = 0;
-		x[i] = 0;
-		y[i] = 0;
-	}
-
 	int changed = 0;
 
 	int i;
@@ -56,21 +50,11 @@ int attributeClusters(float *px, float *py, float *cx, float *cy, int *point_clu
 			changed = 1;
 			point_cluster[i] = cluster;
 		}
-		size[cluster]++;
-		x[cluster] += px[i];
-		y[cluster] += py[i];
 	}
+
 	for(; i < N; i++){
 		int cluster = findCluster(px[i], py[i], cx, cy);
 		point_cluster[i] = cluster;	
-		size[cluster]++;
-		x[cluster] += px[i];
-		y[cluster] += py[i];
-	}
-
-	for(int i = 0; i < K; i++){
-		cx[i] = x[i] / size[i];
-		cy[i] = y[i] / size[i];
 	}
 
 	return changed;
@@ -79,6 +63,8 @@ int attributeClusters(float *px, float *py, float *cx, float *cy, int *point_clu
 void rearrangeCluster(float *px, float *py, float *cx, float *cy, int *point_cluster){
 	int size[K];
 	float x[K], y[K];
+
+#pragma omp simd
 	for(int i = 0; i < K; i++){
 		size[i] = 0;
 		x[i] = 0;
@@ -91,6 +77,7 @@ void rearrangeCluster(float *px, float *py, float *cx, float *cy, int *point_clu
 		y[point_cluster[i]] += py[i];
 	}
 
+#pragma omp simd
 	for(int i = 0; i < K; i++){
 		cx[i] = x[i] / size[i];
 		cy[i] = y[i] / size[i];
@@ -101,11 +88,10 @@ void algorithm(float *px, float *py, float *cx, float *cy, int *point_cluster, i
 	*iterations = 1;
 
 	attributeInitialClusters(px, py, cx, cy, point_cluster);
-	rearrangeCluster(px, py, cx, cy, point_cluster);
 	while(1){
+		rearrangeCluster(px, py, cx, cy, point_cluster);
 		if (attributeClusters(px, py, cx, cy, point_cluster) == 0)
 			break;
-		//rearrangeCluster(px, py, cx, cy, point_cluster);
 		*iterations += 1;
 	}
 
