@@ -19,10 +19,7 @@ int findCluster(float px, float py, float *cx, float *cy){
 	int min = -1;
 
 	for(int j = 0; j < K; j++){
-		float dist, d1, d2;
-		d1 = cx[j] - px;
-		d2 = cy[j] - py;
-		dist = d1 * d1 + d2 * d2;
+		float dist = (cx[j] - px) * (cx[j] - px) + (cy[j] - py) * (cy[j] - py);
 
 		if (dist < dist_min){
 			dist_min = dist;
