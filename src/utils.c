@@ -35,23 +35,8 @@ int findCluster(float px, float py, float *cx, float *cy){
 
 
 void attributeInitialClusters(float *px, float *py, float *cx, float *cy, int *point_cluster){
-	for(int i = 0; i < N; i++){
-		float dist_min = 2; 
-		int min = -1;
-
-		for(int j = 0; j < K; j++){
-			float dist, d1, d2;
-			d1 = cx[j] - px[i];
-			d2 = cy[j] - py[i];
-			dist = d1 * d1 + d2 * d2;
-
-			if (dist < dist_min){
-				dist_min = dist;
-				min = j;
-			}
-		}
-		point_cluster[i] = min; 
-	}
+	for(int i = 0; i < N; i++)
+		point_cluster[i] = findCluster(px[i], py[i], cx, cy);
 }
 
 int attributeClusters(float *px, float *py, float *cx, float *cy, int *point_cluster){
@@ -59,42 +44,16 @@ int attributeClusters(float *px, float *py, float *cx, float *cy, int *point_clu
 
 	int i;
 	for(i = 0; !changed && i < N; i++){
-		float dist_min = 2; 
-		int min = -1;
-
-		for(int j = 0; j < K; j++){
-			float dist, d1, d2;
-			d1 = cx[j] - px[i];
-			d2 = cy[j] - py[i];
-			dist = d1 * d1 + d2 * d2;
-
-			if (dist < dist_min){
-				dist_min = dist;
-				min = j;
-			}
-		}
-		if (min != point_cluster[i]){
+		int cluster = findCluster(px[i], py[i], cx, cy);
+		if (cluster != point_cluster[i]){
 			changed = 1;
-			point_cluster[i] = min;
+			point_cluster[i] = cluster;
 		}
 	}
 
 	for(; i < N; i++){
-		float dist_min = 2; 
-		int min = -1;
-
-		for(int j = 0; j < K; j++){
-			float dist, d1, d2;
-			d1 = cx[j] - px[i];
-			d2 = cy[j] - py[i];
-			dist = d1 * d1 + d2 * d2;
-
-			if (dist < dist_min){
-				dist_min = dist;
-				min = j;
-			}
-		}
-		point_cluster[i] = min;
+		int cluster = findCluster(px[i], py[i], cx, cy);
+		point_cluster[i] = cluster;	
 	}
 
 	return changed;
