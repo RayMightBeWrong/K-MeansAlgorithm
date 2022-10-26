@@ -39,8 +39,8 @@ int findCluster(P point){
 		float dist, d1, d2;
 		d1 = clusters[j]-> centroid-> x - point-> x;
 		d2 = clusters[j]-> centroid-> y - point-> y;
-		dist = pow(d1, 2) + pow(d2, 2);
-			
+		dist = d1 * d1 + d2 * d2;
+
 		if (dist < dist_min){
 			dist_min = dist;
 			min = j;
@@ -110,6 +110,6 @@ void algorithm(){
 	}
 
 	for(int i = 0; i < K; i++){
-		printf("[%d]: %.3f, %.3f", i, clusters[i]-> centroid-> x, clusters[i]-> centroid-> y);
+		printf("[%d]: %.3f, %.3f\n", i, clusters[i]-> centroid-> x, clusters[i]-> centroid-> y);
 	}
 }
