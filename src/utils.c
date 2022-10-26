@@ -41,15 +41,17 @@ void attributeInitialClusters(float *px, float *py, float *cx, float *cy, int *p
 int attributeClusters(float *px, float *py, float *cx, float *cy, int *point_cluster){
 	int changed = 0;
 
-	for(int i = 0; i < N; i++){
+	int i;
+	for(i = 0; !changed && i < N; i++){
 		int cluster = findCluster(px[i], py[i], cx, cy);
-		if (!changed && cluster != point_cluster[i]){
+		if (cluster != point_cluster[i]){
 			changed = 1;
 			point_cluster[i] = cluster;	
 		}
-		else if (cluster != point_cluster[i]){
-			point_cluster[i] = cluster;	
-		}
+	}
+	for(; i < N; i++){
+		int cluster = findCluster(px[i], py[i], cx, cy);
+		point_cluster[i] = cluster;	
 	}
 
 	return changed;
