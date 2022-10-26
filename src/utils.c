@@ -46,7 +46,7 @@ int attributeClusters(float *px, float *py, float *cx, float *cy, int *point_clu
 		int cluster = findCluster(px[i], py[i], cx, cy);
 		if (cluster != point_cluster[i]){
 			changed = 1;
-			point_cluster[i] = cluster;	
+			point_cluster[i] = cluster;
 		}
 	}
 	for(; i < N; i++){
