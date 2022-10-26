@@ -39,6 +39,14 @@ void attributeInitialClusters(float *px, float *py, float *cx, float *cy, int *p
 }
 
 int attributeClusters(float *px, float *py, float *cx, float *cy, int *point_cluster){
+	int size[K];
+	float x[K], y[K];
+	for(int i = 0; i < K; i++){
+		size[i] = 0;
+		x[i] = 0;
+		y[i] = 0;
+	}
+
 	int changed = 0;
 
 	int i;
@@ -48,10 +56,21 @@ int attributeClusters(float *px, float *py, float *cx, float *cy, int *point_clu
 			changed = 1;
 			point_cluster[i] = cluster;
 		}
+		size[cluster]++;
+		x[cluster] += px[i];
+		y[cluster] += py[i];
 	}
 	for(; i < N; i++){
 		int cluster = findCluster(px[i], py[i], cx, cy);
 		point_cluster[i] = cluster;	
+		size[cluster]++;
+		x[cluster] += px[i];
+		y[cluster] += py[i];
+	}
+
+	for(int i = 0; i < K; i++){
+		cx[i] = x[i] / size[i];
+		cy[i] = y[i] / size[i];
 	}
 
 	return changed;
@@ -83,7 +102,7 @@ void algorithm(float *px, float *py, float *cx, float *cy, int *point_cluster, i
 
 	attributeInitialClusters(px, py, cx, cy, point_cluster);
 	while(1){
-		rearrangeCluster(px, py, cx, cy, point_cluster);
+		//rearrangeCluster(px, py, cx, cy, point_cluster);
 		if (attributeClusters(px, py, cx, cy, point_cluster) == 0)
 			break;
 		*iterations += 1;
