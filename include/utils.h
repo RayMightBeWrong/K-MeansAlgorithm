@@ -10,15 +10,13 @@
 typedef struct point *P;
 typedef struct cluster *C;
 
-int iterations;
-P *points;
-C *clusters;
+void init(P *points, C *clusters);
+int  findCluster(P point, C *clusters);
+int  attributeClusters(P *points, C *clusters);
+void attributeInitialClusters(P *points, C *clusters);
+void rearrangeCluster(P *points, C *clusters);
+void algorithm(P *points, C *clusters, int *iterations);
 
-void init();
-int  findCluster(P point);
-int  attributeCluster(P point);
-void attributeInitialClusters();
-void rearrangeCluster();
-void algorithm();
+void printClusters(C *clusters);
 
 #endif

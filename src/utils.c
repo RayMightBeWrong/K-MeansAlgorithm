@@ -10,9 +10,7 @@ struct cluster{
 	P centroid;
 };
 
-void init(){
-	points = malloc(sizeof(P) * N);	
-	clusters = malloc(sizeof(C) * K);
+void init(P *points, C *clusters){
 	for(int i = 0; i < N; i++)
 		points[i] = malloc(sizeof(struct point));
 	for(int i = 0; i < K; i++){
@@ -31,7 +29,7 @@ void init(){
 	}
 }
 
-int findCluster(P point){
+int findCluster(P point, C *clusters){
 	float dist_min = 2; 
 	int min = -1;
 
@@ -51,17 +49,17 @@ int findCluster(P point){
 }
 
 
-void attributeInitialClusters(){
+void attributeInitialClusters(P *points, C *clusters){
 	for(int i = 0; i < N; i++){
-		points[i]-> cluster = findCluster(points[i]);
+		points[i]-> cluster = findCluster(points[i], clusters);
 	}
 }
 
-int attributeClusters(){
+int attributeClusters(P *points, C *clusters){
 	int changed = 0;
 
 	for(int i = 0; i < N; i++){
-		int cluster = findCluster(points[i]);
+		int cluster = findCluster(points[i], clusters);
 		if (!changed && cluster != points[i]-> cluster){
 			changed = 1;
 			points[i]-> cluster = cluster;	
@@ -74,7 +72,7 @@ int attributeClusters(){
 	return changed;
 }
 
-void rearrangeCluster(){
+void rearrangeCluster(P *points, C *clusters){
 	int size[K];
 	float x[K], y[K];
 	for(int i = 0; i < K; i++){
@@ -95,20 +93,20 @@ void rearrangeCluster(){
 	}
 }
 
-void algorithm(){
-	iterations = 1;
+void algorithm(P *points, C *clusters, int *iterations){
+	*iterations = 1;
 
-	attributeInitialClusters();
+	attributeInitialClusters(points, clusters);
 	while(1){
-		rearrangeCluster();
-		if (attributeClusters() == 1){
-			// continuar algoritmo	
-		}
-		else
+		rearrangeCluster(points, clusters);
+		if (attributeClusters(points, clusters) == 0)
 			break;
-		iterations++;
+		*iterations += 1;
 	}
 
+}
+
+void printClusters(C *clusters){
 	for(int i = 0; i < K; i++){
 		printf("[%d]: %.3f, %.3f\n", i, clusters[i]-> centroid-> x, clusters[i]-> centroid-> y);
 	}
