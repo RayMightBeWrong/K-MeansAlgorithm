@@ -4,7 +4,9 @@ SRC	 = src/
 INCLUDES = include/
 EXEC	 = k_means
 
-CFLAGS = -O2 -W -Wall -Wextra -Wuninitialized -Wstrict-aliasing -ftree-vectorize
+CFLAGS = -O2 -W -Wall -Wextra -Wuninitialized -Wstrict-aliasing -ftree-vectorize -msse4 -fopt-info -fopt-info-vec-missed
+
+
 
 .DEFAULT_GOAL = k_means
 

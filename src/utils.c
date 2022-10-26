@@ -1,36 +1,26 @@
 #include "../include/utils.h"
 
-struct point{
-	float x;
-	float y;
-};
 
-void init(P *points, P *clusters){
-	for(int i = 0; i < N; i++)
-		points[i] = malloc(sizeof(struct point));
-	for(int i = 0; i < K; i++){
-		clusters[i] = malloc(sizeof(struct point));
-	}
-
+void init(float *px, float *py, float *cx, float *cy){
 	srand(10);
 	for(int i = 0; i < N; i++){
-		points[i]-> x = (float) rand() / RAND_MAX;
-		points[i]-> y = (float) rand() / RAND_MAX;
+		px[i] = (float) rand() / RAND_MAX;
+		py[i] = (float) rand() / RAND_MAX;
 	}
 	for(int i = 0; i < K; i++){
-		clusters[i]-> x = points[i]-> x;
-		clusters[i]-> y = points[i]-> y;
+		cx[i] = px[i];
+		cy[i] = py[i];
 	}
 }
 
-int findCluster(P point, P *clusters){
+int findCluster(float px, float py, float *cx, float *cy){
 	float dist_min = 2; 
 	int min = -1;
 
 	for(int j = 0; j < K; j++){
 		float dist, d1, d2;
-		d1 = clusters[j]-> x - point-> x;
-		d2 = clusters[j]-> y - point-> y;
+		d1 = cx[j] - px;
+		d2 = cy[j] - py;
 		dist = d1 * d1 + d2 * d2;
 
 		if (dist < dist_min){
@@ -43,17 +33,16 @@ int findCluster(P point, P *clusters){
 }
 
 
-void attributeInitialClusters(P *points, P *clusters, int *point_cluster){
-	for(int i = 0; i < N; i++){
-		point_cluster[i] = findCluster(points[i], clusters);
-	}
+void attributeInitialClusters(float *px, float *py, float *cx, float *cy, int *point_cluster){
+	for(int i = 0; i < N; i++)
+		point_cluster[i] = findCluster(px[i], py[i], cx, cy);
 }
 
-int attributeClusters(P *points, P *clusters, int *point_cluster){
+int attributeClusters(float *px, float *py, float *cx, float *cy, int *point_cluster){
 	int changed = 0;
 
 	for(int i = 0; i < N; i++){
-		int cluster = findCluster(points[i], clusters);
+		int cluster = findCluster(px[i], py[i], cx, cy);
 		if (!changed && cluster != point_cluster[i]){
 			changed = 1;
 			point_cluster[i] = cluster;	
@@ -66,7 +55,7 @@ int attributeClusters(P *points, P *clusters, int *point_cluster){
 	return changed;
 }
 
-void rearrangeCluster(P *points, P *clusters, int *point_cluster){
+void rearrangeCluster(float *px, float *py, float *cx, float *cy, int *point_cluster){
 	int size[K];
 	float x[K], y[K];
 	for(int i = 0; i < K; i++){
@@ -77,31 +66,31 @@ void rearrangeCluster(P *points, P *clusters, int *point_cluster){
 
 	for(int i = 0; i < N; i++){
 		size[point_cluster[i]]++;
-		x[point_cluster[i]] += points[i]-> x;
-		y[point_cluster[i]] += points[i]-> y;
+		x[point_cluster[i]] += px[i];
+		y[point_cluster[i]] += py[i];
 	}
 
 	for(int i = 0; i < K; i++){
-		clusters[i]-> x = x[i] / size[i];
-		clusters[i]-> y = y[i] / size[i];
+		cx[i] = x[i] / size[i];
+		cy[i] = y[i] / size[i];
 	}
 }
 
-void algorithm(P *points, P *clusters, int *point_cluster, int *iterations){
+void algorithm(float *px, float *py, float *cx, float *cy, int *point_cluster, int *iterations){
 	*iterations = 1;
 
-	attributeInitialClusters(points, clusters, point_cluster);
+	attributeInitialClusters(px, py, cx, cy, point_cluster);
 	while(1){
-		rearrangeCluster(points, clusters, point_cluster);
-		if (attributeClusters(points, clusters, point_cluster) == 0)
+		rearrangeCluster(px, py, cx, cy, point_cluster);
+		if (attributeClusters(px, py, cx, cy, point_cluster) == 0)
 			break;
 		*iterations += 1;
 	}
 
 }
 
-void printClusters(P *clusters){
+void printClusters(float *cx, float *cy){
 	for(int i = 0; i < K; i++){
-		printf("[%d]: %.3f, %.3f\n", i, clusters[i]-> x, clusters[i]-> y);
+		printf("[%d]: %.3f, %.3f\n", i, cx[i], cy[i]);
 	}
 }
