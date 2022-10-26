@@ -8,15 +8,14 @@
 #define K 4
 
 typedef struct point *P;
-typedef struct cluster *C;
 
-void init(P *points, C *clusters);
-int  findCluster(P point, C *clusters);
-int  attributeClusters(P *points, C *clusters);
-void attributeInitialClusters(P *points, C *clusters);
-void rearrangeCluster(P *points, C *clusters);
-void algorithm(P *points, C *clusters, int *iterations);
+void init(P *points, P *clusters);
+int  findCluster(P point, P *clusters);
+int  attributeClusters(P *points, P *clusters, int *point_cluster);
+void attributeInitialClusters(P *points, P *clusters, int *point_cluster);
+void rearrangeCluster(P *points, P *clusters, int *point_cluster);
+void algorithm(P *points, P *clusters, int *point_cluster, int *iterations);
 
-void printClusters(C *clusters);
+void printClusters(P *clusters);
 
 #endif
