@@ -8,7 +8,6 @@ void init(float *px, float *py, float *cx, float *cy){
 		py[i] = (float) rand() / RAND_MAX;
 	}
 
-#pragma omp simd
 	for(int i = 0; i < K; i++){
 		cx[i] = px[i];
 		cy[i] = py[i];
@@ -64,7 +63,6 @@ void rearrangeCluster(float *px, float *py, float *cx, float *cy, int *point_clu
 	int size[K];
 	float x[K], y[K];
 
-#pragma omp simd
 	for(int i = 0; i < K; i++){
 		size[i] = 0;
 		x[i] = 0;
@@ -77,7 +75,6 @@ void rearrangeCluster(float *px, float *py, float *cx, float *cy, int *point_clu
 		y[point_cluster[i]] += py[i];
 	}
 
-#pragma omp simd
 	for(int i = 0; i < K; i++){
 		cx[i] = x[i] / size[i];
 		cy[i] = y[i] / size[i];
