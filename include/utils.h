@@ -12,7 +12,7 @@ int  findCluster(float px, float py, float *cx, float *cy);
 int  attributeClusters(float *px, float *py, float *cx, float *cy, int *point_cluster);
 void attributeInitialClusters(float *px, float *py, float *cx, float *cy, int *point_cluster);
 void rearrangeCluster(float *px, float *py, float *cx, float *cy, int *point_cluster);
-void algorithm(float *px, float *py, float *cx, float *cy, int *point_cluster, int *iterations);
+int  algorithm(float *px, float *py, float *cx, float *cy, int *point_cluster);
 
 void printClusters(float *cx, float *cy);
 

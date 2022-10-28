@@ -78,17 +78,18 @@ void rearrangeCluster(float *px, float *py, float *cx, float *cy, int *point_clu
 	}
 }
 
-void algorithm(float *px, float *py, float *cx, float *cy, int *point_cluster, int *iterations){
-	*iterations = 1;
+int algorithm(float *px, float *py, float *cx, float *cy, int *point_cluster){
+	int iterations = 1;
 
 	attributeInitialClusters(px, py, cx, cy, point_cluster);
 	while(1){
 		rearrangeCluster(px, py, cx, cy, point_cluster);
 		if (attributeClusters(px, py, cx, cy, point_cluster) == 0)
 			break;
-		*iterations += 1;
+		iterations ++;
 	}
 
+	return iterations;
 }
 
 void printClusters(float *cx, float *cy){
