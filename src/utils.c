@@ -1,6 +1,7 @@
 #include "../include/utils.h"
 
-
+// function that generates random float values for N points
+// and assigns the first K as centroids
 void init(float *px, float *py, float *cx, float *cy){
 	srand(10);
 	for(int i = 0; i < N; i++){
@@ -14,6 +15,7 @@ void init(float *px, float *py, float *cx, float *cy){
 	}
 }
 
+// finds the most appropriate cluster for a given point based on euclidean distance
 int findCluster(float px, float py, float *cx, float *cy){
 	float dist_min = 2; 
 	int min = -1;
@@ -30,15 +32,18 @@ int findCluster(float px, float py, float *cx, float *cy){
 	return min;
 }
 
-
+// associates points to a cluster for the 1st time in the algorithm
 void attributeInitialClusters(float *px, float *py, float *cx, float *cy, int *point_cluster){
 	for(int i = 0; i < N; i++)
 		point_cluster[i] = findCluster(px[i], py[i], cx, cy);
 }
 
+// associates points to a cluster 
 int attributeClusters(float *px, float *py, float *cx, float *cy, int *point_cluster){
 	int changed = 0;
 
+	// find the most appropriate cluster to a given point
+	// if it's different from its current one, change to another 'for' loop
 	int i;
 	for(i = 0; !changed && i < N; i++){
 		int cluster = findCluster(px[i], py[i], cx, cy);
@@ -48,6 +53,7 @@ int attributeClusters(float *px, float *py, float *cx, float *cy, int *point_clu
 		}
 	}
 
+	// faster 'for' loop that doesn't check if a point changed cluster 
 	for(; i < N; i++){
 		int cluster = findCluster(px[i], py[i], cx, cy);
 		point_cluster[i] = cluster;	
@@ -56,7 +62,11 @@ int attributeClusters(float *px, float *py, float *cx, float *cy, int *point_clu
 	return changed;
 }
 
+// calculates the centroids of each cluster
 void rearrangeCluster(float *px, float *py, float *cx, float *cy, int *point_cluster){
+	// size keeps track of how much points are in each cluster
+	/* x and y contain the sum of x and y values (respectively) 
+	   of the points that belong to the cluster */
 	int size[K];
 	float x[K], y[K];
 
@@ -72,12 +82,14 @@ void rearrangeCluster(float *px, float *py, float *cx, float *cy, int *point_clu
 		y[point_cluster[i]] += py[i];
 	}
 
+	// calculate a centroid's new value
 	for(int i = 0; i < K; i++){
 		cx[i] = x[i] / size[i];
 		cy[i] = y[i] / size[i];
 	}
 }
 
+// executes k-means algorithm and returns how many iterations were made
 int algorithm(float *px, float *py, float *cx, float *cy, int *point_cluster){
 	int iterations = 1;
 
@@ -92,6 +104,7 @@ int algorithm(float *px, float *py, float *cx, float *cy, int *point_cluster){
 	return iterations;
 }
 
+// prints information about the clusters
 void printClusters(float *cx, float *cy){
 	for(int i = 0; i < K; i++){
 		printf("[%d]: %.3f, %.3f\n", i, cx[i], cy[i]);
