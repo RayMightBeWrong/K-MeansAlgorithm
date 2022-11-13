@@ -46,18 +46,29 @@ int attributeClusters(int N, int K, int THREADS, float *px, float *py,
 
 	// find the most appropriate cluster to a given point
 	// if it's different from its current one, change to another 'for' loop
-	int task;
-#pragma omp parallel
-#pragma omp for private(task) 
+	int task[THREADS];
+	for(int i = 0; i < THREADS; i++)
+		task[i] = i * (N / THREADS);	
+
+	int cluster;
+	#pragma omp parallel for num_threads(THREADS) private(cluster)
 	for(int i = 0; i < N; i++){
-		task = omp_get_thread_num() * (N / THREADS);
-		int cluster = findCluster(K, px[i], py[i], cx, cy);
-		if (cluster != point_cluster[i]){
+		int id = omp_get_thread_num();
+		int cluster = findCluster(K, px[task[id]], py[task[id]], cx, cy);
+		if (cluster != point_cluster[task[id]]){
 			changed = 1;
-			point_cluster[i] = cluster;
+			point_cluster[task[id]] = cluster;
 		}
-		task ++;
+		task[id]++;
 	}
+
+	// faster 'for' loop that doesn't check if a point changed cluster 
+	//#pragma omp parallel for num_threads(THREADS)
+	//for(int j = i; j < N; j++){
+	//	int id = omp_get_thread_num();
+	//	int cluster = findCluster(K, px[id], py[id], cx, cy);
+	//	point_cluster[id] = cluster;	
+	//}
 
 	return changed;
 }
