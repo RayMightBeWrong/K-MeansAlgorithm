@@ -3,11 +3,11 @@ BIN	 	= bin/
 SRC	 	= src/
 INCLUDES 	= include/
 EXEC	 	= k_means
-THREADS	 	= 2
+THREADS	 	= 8
 
 CP_CLUSTERS	 = 4
 
-CFLAGS = -std=c99 -O3 -W -Wall -Wextra -Wuninitialized -Wstrict-aliasing -ftree-vectorize -msse4 -fopt-info
+CFLAGS = -std=c99 -O3 -W -Wall -Wextra -Wuninitialized -Wstrict-aliasing -ftree-vectorize -msse4 -fopt-info -fopenmp
 
 
 
