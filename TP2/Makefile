@@ -23,7 +23,7 @@ clean:
 	rm -r bin/*
 
 runseq:
-	./$(BIN)$(EXEC) 10000000 $(CP_CLUSTERS) 1
+	./$(BIN)$(EXEC)
 
 runpar:
-	./$(BIN)$(EXEC) 10000000 $(CP_CLUSTERS) $(THREADS)
+	./$(BIN)$(EXEC)

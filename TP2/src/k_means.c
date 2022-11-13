@@ -1,10 +1,6 @@
 #include "../include/utils.h"
 
-int main(int argc, char **argv){
-	int N = atoi(argv[1]);
-	int K = atoi(argv[2]);
-	int THREADS = atoi(argv[3]);
-	
+int main(){
 	// px contains the x values of the points
 	// py contains the y values of the points
 	float *px = malloc(sizeof(float) * N);
@@ -23,8 +19,8 @@ int main(int argc, char **argv){
 
 	// init gives random values to points and clusters
 	// algorithm executes the k-means algorithm and prints the information out
-	init(N, K, px, py, cx, cy);
-	algorithm(N, K, px, py, cx, cy, point_cluster, cluster_size);
+	init(px, py, cx, cy);
+	algorithm(px, py, cx, cy, point_cluster, cluster_size);
 
 	return 0;
 }

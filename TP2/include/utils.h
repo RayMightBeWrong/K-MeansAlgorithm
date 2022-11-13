@@ -4,15 +4,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void init(int N, int K, float *px, float *py, float *cx, float *cy);
-int  findCluster(int K, float px, float py, float *cx, float *cy);
-int  attributeClusters(int N, int K, float *px, float *py, float *cx, float *cy, int *point_cluster);
-void attributeInitialClusters(int N, int K, float *px, float *py, 
-				float *cx, float *cy, int *point_cluster);
-void rearrangeCluster(int N, int K, float *px, float *py, 
-			float *cx, float *cy, int *point_cluster, int *size);
-void algorithm(int N, int K, float *px, float *py, float *cx, float *cy, int *point_cluster, int *size);
+#define N 10000000
+#define K 4
 
-void printInfo(int N, int K, float *cx, float *cy, int *size, int iterations);
+void init(float *px, float *py, float *cx, float *cy);
+int  findCluster(float px, float py, float *cx, float *cy);
+int  attributeClusters(float *px, float *py, float *cx, float *cy, int *point_cluster);
+void attributeInitialClusters(float *px, float *py, 
+				float *cx, float *cy, int *point_cluster);
+void rearrangeCluster(float *px, float *py, 
+			float *cx, float *cy, int *point_cluster, int *size);
+void algorithm(float *px, float *py, float *cx, float *cy, int *point_cluster, int *size);
+
+void printInfo(float *cx, float *cy, int *size, int iterations);
 
 #endif
