@@ -92,17 +92,16 @@ void rearrangeCluster(int N, int K, float *px, float *py,
 
 // executes k-means algorithm and returns how many iterations were made
 void algorithm(int N, int K, float *px, float *py, float *cx, float *cy, int *point_cluster, int *size){
-	int iterations = 1;
+	int i;
 
 	attributeInitialClusters(N, K, px, py, cx, cy, point_cluster);
-	while(1){
+	for(i = 0; i < 20; i++){
 		rearrangeCluster(N, K, px, py, cx, cy, point_cluster, size);
 		if (attributeClusters(N, K, px, py, cx, cy, point_cluster) == 0)
 			break;
-		iterations ++;
 	}
 
-	printInfo(N, K, cx, cy, size, iterations);
+	printInfo(N, K, cx, cy, size, i);
 }
 
 // prints information about the clusters
