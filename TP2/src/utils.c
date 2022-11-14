@@ -35,6 +35,7 @@ int findCluster(int K, float px, float py, float *cx, float *cy){
 // associates points to a cluster for the 1st time in the algorithm
 void attributeInitialClusters(int N, int K, int THREADS, float *px, float *py, 
 				float *cx, float *cy, int *point_cluster){
+#pragma omp parallel for num_threads(THREADS)
 	for(int i = 0; i < N; i++)
 		point_cluster[i] = findCluster(K, px[i], py[i], cx, cy);
 }
@@ -46,29 +47,16 @@ int attributeClusters(int N, int K, int THREADS, float *px, float *py,
 
 	// find the most appropriate cluster to a given point
 	// if it's different from its current one, change to another 'for' loop
-	int task[THREADS];
-	for(int i = 0; i < THREADS; i++)
-		task[i] = i * (N / THREADS);	
 
 	int cluster;
-	#pragma omp parallel for num_threads(THREADS) private(cluster)
+#pragma omp parallel for num_threads(THREADS) private(cluster)
 	for(int i = 0; i < N; i++){
-		int id = omp_get_thread_num();
-		int cluster = findCluster(K, px[task[id]], py[task[id]], cx, cy);
-		if (cluster != point_cluster[task[id]]){
+		cluster = findCluster(K, px[i], py[i], cx, cy);
+		if (cluster != point_cluster[i]){
 			changed = 1;
-			point_cluster[task[id]] = cluster;
+			point_cluster[i] = cluster;
 		}
-		task[id]++;
 	}
-
-	// faster 'for' loop that doesn't check if a point changed cluster 
-	//#pragma omp parallel for num_threads(THREADS)
-	//for(int j = i; j < N; j++){
-	//	int id = omp_get_thread_num();
-	//	int cluster = findCluster(K, px[id], py[id], cx, cy);
-	//	point_cluster[id] = cluster;	
-	//}
 
 	return changed;
 }
@@ -79,7 +67,17 @@ void rearrangeCluster(int N, int K, int THREADS, float *px, float *py,
 	// size keeps track of how much points are in each cluster
 	/* x and y contain the sum of x and y values (respectively) 
 	   of the points that belong to the cluster */
+	int sizeT[K][THREADS];
+	float xT[K][THREADS], yT[K][THREADS];
 	float x[K], y[K];
+
+	for(int i = 0; i < K; i++){
+		for(int j = 0; j < THREADS; j++){
+			sizeT[i][j] = 0;
+			xT[i][j] = 0;
+			yT[i][j] = 0;
+		}
+	}
 
 	for(int i = 0; i < K; i++){
 		size[i] = 0;
@@ -87,10 +85,24 @@ void rearrangeCluster(int N, int K, int THREADS, float *px, float *py,
 		y[i] = 0;
 	}
 
+#pragma omp parallel for num_threads(THREADS)
 	for(int i = 0; i < N; i++){
-		size[point_cluster[i]]++;
-		x[point_cluster[i]] += px[i];
-		y[point_cluster[i]] += py[i];
+		int id = omp_get_thread_num();
+		sizeT[point_cluster[i]][id] ++;
+		xT[point_cluster[i]][id] += px[i];
+		yT[point_cluster[i]][id] += py[i];
+//		size[point_cluster[i]]++;
+//		x[point_cluster[i]] += px[i];
+//		y[point_cluster[i]] += py[i];
+	}
+
+#pragma omp parallel for num_threads(THREADS)
+	for(int i = 0; i < K; i++){
+		for(int j = 0; j < THREADS; j++){
+			size[i] += sizeT[i][j];
+			x[i] += xT[i][j];
+			y[i] += yT[i][j];
+		}
 	}
 
 	// calculate a centroid's new value
