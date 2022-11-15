@@ -67,45 +67,42 @@ void rearrangeCluster(int N, int K, int THREADS, float *px, float *py,
 	// size keeps track of how much points are in each cluster
 	/* x and y contain the sum of x and y values (respectively) 
 	   of the points that belong to the cluster */
-	int sizeT[K][THREADS];
-	float xT[K][THREADS], yT[K][THREADS];
-	float x[K], y[K];
+	float x[K], y[K], local_x[K], local_y[K];
+	int local_size[K];
 
-	for(int i = 0; i < K; i++){
-		for(int j = 0; j < THREADS; j++){
-			sizeT[i][j] = 0;
-			xT[i][j] = 0;
-			yT[i][j] = 0;
-		}
-	}
 
 	for(int i = 0; i < K; i++){
 		size[i] = 0;
 		x[i] = 0;
 		y[i] = 0;
+		local_size[i] = 0;
+		local_x[i] = 0;
+		local_y[i] = 0;
 	}
 
-#pragma omp parallel for num_threads(THREADS)
+#pragma omp parallel num_threads(THREADS) firstprivate(local_size, local_x, local_y)
+{
+
+	#pragma omp for
 	for(int i = 0; i < N; i++){
-		int id = omp_get_thread_num();
-		sizeT[point_cluster[i]][id] ++;
-		xT[point_cluster[i]][id] += px[i];
-		yT[point_cluster[i]][id] += py[i];
-//		size[point_cluster[i]]++;
-//		x[point_cluster[i]] += px[i];
-//		y[point_cluster[i]] += py[i];
+		local_size[point_cluster[i]]++;
+		local_x[point_cluster[i]] += px[i];
+		local_y[point_cluster[i]] += py[i];
 	}
 
-#pragma omp parallel for num_threads(THREADS)
+#pragma omp critical 
+{ 
 	for(int i = 0; i < K; i++){
-		for(int j = 0; j < THREADS; j++){
-			size[i] += sizeT[i][j];
-			x[i] += xT[i][j];
-			y[i] += yT[i][j];
-		}
+		size[i] += local_size[i];
+		x[i] += local_x[i];
+		y[i] += local_y[i];
 	}
+}
+	
 
 	// calculate a centroid's new value
+}
+
 	for(int i = 0; i < K; i++){
 		cx[i] = x[i] / size[i];
 		cy[i] = y[i] / size[i];
