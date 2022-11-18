@@ -3,9 +3,7 @@ BIN	 	= bin/
 SRC	 	= src/
 INCLUDES 	= include/
 EXEC	 	= k_means
-THREADS	 	= 8
-
-CP_CLUSTERS	 = 4
+THREADS	 	= 36
 
 CFLAGS = -std=c99 -O3 -W -Wall -Wextra -Wuninitialized -Wstrict-aliasing -ftree-vectorize -msse4 -fopt-info -fopenmp
 
@@ -23,7 +21,7 @@ clean:
 	rm -r bin/*
 
 runseq:
-	./$(BIN)$(EXEC) 10000000 $(CP_CLUSTERS) 1
+	./$(BIN)$(EXEC) 10000000 $(CP_CLUSTERS)
 
 runpar:
 	./$(BIN)$(EXEC) 10000000 $(CP_CLUSTERS) $(THREADS)

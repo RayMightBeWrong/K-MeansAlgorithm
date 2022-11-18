@@ -83,7 +83,7 @@ void rearrangeCluster(int N, int K, int THREADS, float *px, float *py,
 #pragma omp parallel num_threads(THREADS) firstprivate(local_size, local_x, local_y)
 {
 
-	#pragma omp for
+	#pragma omp for nowait
 	for(int i = 0; i < N; i++){
 		local_size[point_cluster[i]]++;
 		local_x[point_cluster[i]] += px[i];
