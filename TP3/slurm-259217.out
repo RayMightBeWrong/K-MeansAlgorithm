@@ -1,0 +1,30 @@
+==728== NVPROF is profiling process 728, command: ./bin/k_means 10000000 4 32
+==728== Profiling application: ./bin/k_means 10000000 4 32
+==728== Profiling result:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   49.85%  267.22ms        64  4.1753ms     864ns  12.334ms  [CUDA memcpy HtoD]
+                   36.61%  196.25ms        80  2.4531ms  1.4710us  9.8738ms  [CUDA memcpy DtoH]
+                   13.54%  72.558ms        20  3.6279ms  3.4384ms  3.9185ms  attributeCluster(float*, float*, float*, float*, int*, int*, int, int)
+                    0.01%  36.289us        20  1.8140us  1.7600us  2.0160us  [CUDA memset]
+      API calls:   77.36%  548.96ms       144  3.8122ms  6.0400us  12.616ms  cudaMemcpy
+                   22.43%  159.19ms         6  26.532ms  5.5090us  158.67ms  cudaMalloc
+                    0.11%  796.00us        20  39.800us  37.587us  62.618us  cudaLaunchKernel
+                    0.04%  293.70us        20  14.684us  12.678us  26.878us  cudaMemset
+                    0.03%  202.90us         1  202.90us  202.90us  202.90us  cuDeviceTotalMem
+                    0.02%  163.98us       101  1.6230us     190ns  65.224us  cuDeviceGetAttribute
+                    0.00%  20.953us         1  20.953us  20.953us  20.953us  cuDeviceGetName
+                    0.00%  9.5820us         1  9.5820us  9.5820us  9.5820us  cuDeviceGetPCIBusId
+                    0.00%  2.9990us         2  1.4990us     834ns  2.1650us  cudaGetLastError
+                    0.00%  1.7690us         3     589ns     221ns     979ns  cuDeviceGetCount
+                    0.00%     974ns         2     487ns     310ns     664ns  cuDeviceGet
+                    0.00%     429ns         1     429ns     429ns     429ns  cuDeviceGetUuid
+N = 10000000, K = 4
+[0]: (0.250, 0.750) : Size: 2498547
+[1]: (0.250, 0.250) : Size: 2501939
+[2]: (0.750, 0.250) : Size: 2499192
+[3]: (0.750, 0.750) : Size: 2500322
+Iterations: 20
+
+real	0m2.666s
+user	0m1.315s
+sys	0m0.629s
