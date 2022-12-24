@@ -1,10 +1,40 @@
 #include "../include/utils.h"
 
+
+cudaEvent_t start, stop;
+
+void checkCUDAError (const char *msg) {
+        cudaError_t err = cudaGetLastError();
+        if( cudaSuccess != err) {
+                cerr << "Cuda error: " << msg << ", " << cudaGetErrorString( err) << endl;
+                exit(-1);
+        }
+}
+
+// These are specific to measure the execution of only the kernel execution - might be useful
+void startKernelTime () {
+        cudaEventCreate(&start);
+        cudaEventCreate(&stop);
+
+        cudaEventRecord(start);
+}
+
+void stopKernelTime () {
+        cudaEventRecord(stop);
+
+        cudaEventSynchronize(stop);
+        float milliseconds = 0;
+        cudaEventElapsedTime(&milliseconds, start, stop);
+
+        cout << endl << "Basic profiling: " << milliseconds << " ms have elapsed for the kernel execution" << endl << endl;
+}
+
+
+
 int main(int argc, char **argv){
+	chrono::steady_clock::time_point begin = chrono::steady_clock::now();		
 	// N is the number of points 
-	// K is the number of clusters and gets the value of the environment variable CP_CLUSTERS 
 	int N = atoi(argv[1]);
-	int K = atoi(argv[2]);
 	
 	// px contains the x values of the points
 	// py contains the y values of the points
@@ -16,23 +46,21 @@ int main(int argc, char **argv){
 	float *cx = (float*) malloc(sizeof(float) * K);
 	float *cy = (float*) malloc(sizeof(float) * K);
 
-	// keeps track of which cluster a point belongs yo
+	// keeps track of which cluster a point belongs to
 	int *point_cluster = (int*) malloc(sizeof(int) * N);
-	
-	// keeps track of which cluster a point belongs yo
-	int *cluster_size = (int*) malloc(sizeof(int) * K);
 
 	// init gives random values to points and clusters
 	// algorithm executes the k-means algorithm and prints the information out
-	init(N, K, px, py, cx, cy);
+	init(N, px, py, cx, cy);
 
-	if (argc == 4){
-		int THREADS = atoi(argv[3]);
-		kmeans(N, K, THREADS, px, py, cx, cy, point_cluster, cluster_size);
+	chrono::steady_clock::time_point end = chrono::steady_clock::now();
+        cout << endl << "Sequential CPU execution: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " milliseconds" << endl << endl;
+	startKernelTime();
+	if (argc == 3){
+		int THREADS = atoi(argv[2]);
+		kmeans(N, THREADS, px, py, cx, cy, point_cluster);
 	}
-	else
-		kmeans(N, K, 1, px, py, cx, cy, point_cluster, cluster_size);
-		
+	stopKernelTime();
 
 	return 0;
 }

@@ -4,4 +4,4 @@
 #SBATCH --constraint=k20
 
 
-time nvprof ./bin/k_means 10000000 4 32
+nvprof ./bin/k_means 10000000 1024

@@ -3,61 +3,9 @@
 using namespace std;
 
 
-
-
-
-
-
-
-
-cudaEvent_t start, stop;
-
-void checkCUDAError (const char *msg) {
-	cudaError_t err = cudaGetLastError();
-	if( cudaSuccess != err) {
-		cerr << "Cuda error: " << msg << ", " << cudaGetErrorString( err) << endl;
-		exit(-1);
-	}
-}
-
-// These are specific to measure the execution of only the kernel execution - might be useful
-void startKernelTime (void) {
-	cudaEventCreate(&start);
-	cudaEventCreate(&stop);
-
-	cudaEventRecord(start);
-}
-
-void stopKernelTime (void) {
-	cudaEventRecord(stop);
-
-	cudaEventSynchronize(stop);
-	float milliseconds = 0;
-	cudaEventElapsedTime(&milliseconds, start, stop);
-
-	cout << endl << "Basic profiling: " << milliseconds << " ms have elapsed for the kernel execution" << endl << endl;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // function that generates random float values for N points
 // and assigns the first K as centroids
-void init(int N, int K, float *px, float *py, float *cx, float *cy){
+void init(int N, float *px, float *py, float *cx, float *cy){
 	srand(10);
 	for(int i = 0; i < N; i++){
 		px[i] = (float) rand() / RAND_MAX;
@@ -70,80 +18,30 @@ void init(int N, int K, float *px, float *py, float *cx, float *cy){
 	}
 }
 
-// finds the most appropriate cluster for a given point based on euclidean distance
-inline int findCluster(int K, float px, float py, float *cx, float *cy){
-	float dist_min = 2; 
-	int min = -1;
-
-	for(int j = 0; j < K; j++){
-		float dist = (cx[j] - px) * (cx[j] - px) + (cy[j] - py) * (cy[j] - py);
-
-		if (dist < dist_min){
-			dist_min = dist;
-			min = j;
-		}
-	}
-
-	return min;
-}
-
-// associates points to a cluster 
-int attributeClusters(int N, int K, int THREADS, float *px, float *py, 
-			float *cx, float *cy, int *point_cluster){
-	int changed = 0;
-	int cluster;
-	for(int i = 0; i < N; i++){
-		cluster = findCluster(K, px[i], py[i], cx, cy);
-		if (cluster != point_cluster[i]){
-			changed = 1;
-			point_cluster[i] = cluster;
-		}
-	}
-
-	return changed;
-}
-
-// calculates the centroids of each cluster
-void rearrangeCluster(int N, int K, int THREADS, float *px, float *py, 
-				float *cx, float *cy, int *point_cluster, int *size){
-	// size keeps track of how much points are in each cluster
-	/* x and y contain the sum of x and y values (respectively) 
-	   of the points that belong to the cluster */
-	float x[K], y[K];
-
-	for(int i = 0; i < K; i++){
-		size[i] = 0;
-		x[i] = 0;
-		y[i] = 0;
-	}
-
-	for(int i = 0; i < N; i++){
-		size[point_cluster[i]]++;
-		x[point_cluster[i]] += px[i];
-		y[point_cluster[i]] += py[i];
-	}
-
-	for(int i = 0; i < K; i++){
-		cx[i] = x[i] / size[i];
-		cy[i] = y[i] / size[i];
-	}
-}
 
 __global__ 
 void attributeCluster(float *cx, float *cy, float *px, float *py, 
-			int *point_cluster, int *changed, const int N, const int K){
+			int *point_cluster, int *changed, const int N){
 	int id = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (id < N){
+		__shared__ float lcx[K];
+		__shared__ float lcy[K];
 		float x = px[id];
 		float y = py[id];
+
+		int lid = threadIdx.x; 
+		if (lid < K){
+			lcx[lid] = cx[lid];
+			lcy[lid] = cy[lid];
+		}
+		__syncthreads();
 		
-		//int changed = 0;
 		int cluster = -1;
 		float dist_min = 2; 
 
 		for(int j = 0; j < K; j++){
-			float dist = (cx[j] - x) * (cx[j] - x) + (cy[j] - y) * (cy[j] - y);
+			float dist = (lcx[j] - x) * (lcx[j] - x) + (lcy[j] - y) * (lcy[j] - y);
 
 			if (dist < dist_min){
 				dist_min = dist;
@@ -160,68 +58,106 @@ void attributeCluster(float *cx, float *cy, float *px, float *py,
 	}
 } 
 
-int clustersChanged(int blocks, int *changed){
-	int res = 0;
 
-	for(int i = 0; i < blocks; i++){
-		if (changed[i] != 0){
-			res = 1;
-			break;
+__global__
+void calcClusterValues(const int N, const int THREADS, const float *px, const float *py, 
+			float *x, float *y, int *size, const int *point_cluster){
+
+	int id = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (id < N){
+		int lid = threadIdx.x;
+		__shared__ int lsize[K];
+		__shared__ float lx[K];
+		__shared__ float ly[K];
+
+		// size keeps track of how much points are in each cluster
+		// x and y contain the sum of x and y values (respectively) 
+		// of the points that belong to the cluster 
+		if (lid < K){
+			size[blockIdx.x * K + lid] = 0;
+			x[blockIdx.x * K + lid] = 0;
+			y[blockIdx.x * K + lid] = 0;
+			lsize[lid] = 0;
+			lx[lid] = 0;	
+			ly[lid] = 0;
 		}
-	}
+		__syncthreads();
 
-	return res;
+		int cluster = point_cluster[id];
+		atomicAdd(&lsize[cluster], 1);
+		atomicAdd(&lx[cluster], px[id]);
+		atomicAdd(&ly[cluster], py[id]);
+		__syncthreads();
+
+		if (lid < K){
+			atomicAdd(&size[lid], lsize[lid]);
+			atomicAdd(&x[lid], lx[lid]);
+			atomicAdd(&y[lid], ly[lid]);
+		}
+		__syncthreads();
+		
+	}
+}
+
+// calculates the centroids of each cluster
+void rearrangeCluster(float *cx, float *cy, float *x, float *y, int *size){
+	for(int i = 0; i < K; i++){
+		cx[i] = x[i] / size[i];
+		cy[i] = y[i] / size[i];
+	}
 }
 
 // executes k-means algorithm and returns how many iterations were made
-void kmeans(int N, int K, int THREADS, float *px, float *py, 
-		float *cx, float *cy, int *point_cluster, int *size){
+void kmeans(const int N, const int THREADS, float *px, float *py, 
+		float *cx, float *cy, int *point_cluster){
 
 	int blocks = N/THREADS + 1; 
 	float *dcx, *dcy, *dpx, *dpy;
-	int *dpoint_cluster, *dchanged, changed[1];
+	int *dpoint_cluster, *dchanged, changed[1], *dsize;
+	int *size = (int*) malloc(K * sizeof(int));
+	float *x = (float*) malloc(K * sizeof(float)), 
+	      *y = (float*) malloc(K * sizeof(float));
 	memset(point_cluster, 0, N * sizeof(int));
 
 	cudaMalloc((void**) &dcx, K * sizeof(float));
 	cudaMalloc((void**) &dcy, K * sizeof(float));
+	cudaMalloc((void**) &dsize, K * sizeof(int));
 	cudaMalloc((void**) &dpx, N * sizeof(float));
 	cudaMalloc((void**) &dpy, N * sizeof(float));
 	cudaMalloc((void**) &dpoint_cluster, N * sizeof(int));
 	cudaMalloc((void**) &dchanged, sizeof(int));
-	checkCUDAError("malloc");
 
-	cudaMemcpy(dcx, cx, K * sizeof(float), cudaMemcpyHostToDevice);
-	cudaMemcpy(dcy, cy, K * sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemcpy(dpx, px, N * sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemcpy(dpy, py, N * sizeof(float), cudaMemcpyHostToDevice);
-	checkCUDAError("cpy");
 
 	int i;
 	for(i = 0; i < 20; i++){
-		cudaMemcpy(dpoint_cluster, point_cluster, N * sizeof(int), cudaMemcpyHostToDevice);
+		cudaMemcpy(dcx, cx, K * sizeof(int), cudaMemcpyHostToDevice);
+		cudaMemcpy(dcy, cy, K * sizeof(int), cudaMemcpyHostToDevice);
 		cudaMemset(dchanged, 0, sizeof(int));
-		//startKernelTime ();
-		attributeCluster <<< blocks, THREADS >>> (dcx, dcy, dpx, dpy, dpoint_cluster, dchanged, N, K);
-		//stopKernelTime ();
+		attributeCluster <<< blocks, THREADS >>> (dcx, dcy, dpx, dpy, dpoint_cluster, dchanged, N);
+		cudaDeviceSynchronize();
 
 		cudaMemcpy(changed, dchanged, sizeof(int), cudaMemcpyDeviceToHost);
 		if (*changed == 0)
 			break;
 
-		cudaMemcpy(point_cluster, dpoint_cluster, N * sizeof(int), cudaMemcpyDeviceToHost);
-		cudaMemcpy(cx, dcx, K * sizeof(float), cudaMemcpyDeviceToHost);
-		cudaMemcpy(cy, dcy, K * sizeof(float), cudaMemcpyDeviceToHost);
-		rearrangeCluster(N, K, THREADS, px, py, cx, cy, point_cluster, size);
+		calcClusterValues <<< blocks, THREADS >>> (N, THREADS, dpx, dpy, dcx, dcy, dsize, dpoint_cluster);
+		cudaDeviceSynchronize();
 
-		cudaMemcpy(dcx, cx, K * sizeof(int), cudaMemcpyHostToDevice);
-		cudaMemcpy(dcy, cy, K * sizeof(int), cudaMemcpyHostToDevice);
+		cudaMemcpy(x, dcx, K * sizeof(float), cudaMemcpyDeviceToHost);
+		cudaMemcpy(y, dcy, K * sizeof(float), cudaMemcpyDeviceToHost);
+		cudaMemcpy(size, dsize, K * sizeof(float), cudaMemcpyDeviceToHost);
+		
+		rearrangeCluster(cx, cy, x, y, size);
 	}
 
-	printInfo(N, K, cx, cy, size, i);
+	printInfo(N, cx, cy, size, i);
 }
 
-// prints information about the clusters
-void printInfo(int N, int K, float *cx, float *cy, int *size, int iterations){
+	// prints information about the clusters
+void printInfo(int N, float *cx, float *cy, int *size, int iterations){
 	printf("N = %d, K = %d\n", N, K);
 
 	for(int i = 0; i < K; i++)

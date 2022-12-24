@@ -3,8 +3,7 @@ BIN	 	= bin/
 SRC	 	= src/
 INCLUDES 	= include/
 EXEC	 	= k_means
-CP_CLUSTERS	= 4
-THREADS	 	= 32
+THREADS	 	= 1024 
 
 CFLAGS = -O3 -g -std=c++11 -arch=sm_35 -Wno-deprecated-gpu-targets
 
@@ -21,7 +20,7 @@ clean:
 	rm -r bin/*
 
 runseq:
-	./$(BIN)$(EXEC) 10000000 $(CP_CLUSTERS)
+	./$(BIN)$(EXEC) 10000000 
 
 runpar:
-	./$(BIN)$(EXEC) 10000000 $(CP_CLUSTERS) $(THREADS)
+	./$(BIN)$(EXEC) 10000000 $(THREADS)
