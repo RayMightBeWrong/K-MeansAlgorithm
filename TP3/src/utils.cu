@@ -49,7 +49,6 @@ void attributeCluster(float *cx, float *cy, float *px, float *py,
 			}
 		}
 
-
 		if (cluster != point_cluster[id]){
 			point_cluster[id] = cluster;
 			if (*changed == 0)
@@ -75,9 +74,6 @@ void calcClusterValues(const int N, const int THREADS, const float *px, const fl
 		// x and y contain the sum of x and y values (respectively) 
 		// of the points that belong to the cluster 
 		if (lid < K){
-			size[blockIdx.x * K + lid] = 0;
-			x[blockIdx.x * K + lid] = 0;
-			y[blockIdx.x * K + lid] = 0;
 			lsize[lid] = 0;
 			lx[lid] = 0;	
 			ly[lid] = 0;
@@ -85,9 +81,9 @@ void calcClusterValues(const int N, const int THREADS, const float *px, const fl
 		__syncthreads();
 
 		int cluster = point_cluster[id];
-		atomicAdd(&lsize[cluster], 1);
 		atomicAdd(&lx[cluster], px[id]);
 		atomicAdd(&ly[cluster], py[id]);
+		atomicAdd(&lsize[cluster], 1);
 		__syncthreads();
 
 		if (lid < K){
@@ -96,7 +92,6 @@ void calcClusterValues(const int N, const int THREADS, const float *px, const fl
 			atomicAdd(&y[lid], ly[lid]);
 		}
 		__syncthreads();
-		
 	}
 }
 
@@ -143,6 +138,9 @@ void kmeans(const int N, const int THREADS, float *px, float *py,
 		if (*changed == 0)
 			break;
 
+		cudaMemset(dsize, 0, K * sizeof(int));
+		cudaMemset(dcx, 0, K * sizeof(int));
+		cudaMemset(dcy, 0, K * sizeof(int));
 		calcClusterValues <<< blocks, THREADS >>> (N, THREADS, dpx, dpy, dcx, dcy, dsize, dpoint_cluster);
 		cudaDeviceSynchronize();
 
