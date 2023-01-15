@@ -151,7 +151,7 @@ void kmeans(const int N, const int THREADS, float *px, float *py,
 	printInfo(N, cx, cy, size, i);
 }
 
-	// prints information about the clusters
+// prints information about the clusters
 void printInfo(int N, float *cx, float *cy, int *size, int iterations){
 	printf("N = %d, K = %d\n", N, K);
 
