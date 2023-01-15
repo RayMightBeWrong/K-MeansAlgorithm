@@ -107,6 +107,8 @@ void rearrangeCluster(float *cx, float *cy, float *x, float *y, int *size){
 void kmeans(const int N, const int THREADS, float *px, float *py, 
 		float *cx, float *cy, int *point_cluster){
 
+chrono::steady_clock::time_point begin = chrono::steady_clock::now();
+
 	int blocks = N/THREADS + 1; 
 	float *dcx, *dcy, *dpx, *dpy;
 	int *dpoint_cluster, *dchanged, changed[1], *dsize;
@@ -126,6 +128,11 @@ void kmeans(const int N, const int THREADS, float *px, float *py,
 	cudaMemcpy(dpx, px, N * sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemcpy(dpy, py, N * sizeof(float), cudaMemcpyHostToDevice);
 
+
+chrono::steady_clock::time_point end = chrono::steady_clock::now();
+        cout << endl << "Sequential CPU execution: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " milliseconds" << endl << endl;
+
+begin = chrono::steady_clock::now();
 	int i;
 	for(i = 0; i < 20; i++){
 		cudaMemcpy(dcx, cx, K * sizeof(int), cudaMemcpyHostToDevice);
@@ -151,6 +158,8 @@ void kmeans(const int N, const int THREADS, float *px, float *py,
 		rearrangeCluster(cx, cy, x, y, size);
 	}
 
+end = chrono::steady_clock::now();
+        cout << endl << "Sequential CPU execution: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " milliseconds" << endl << endl;
 	printInfo(N, cx, cy, size, i);
 }
 

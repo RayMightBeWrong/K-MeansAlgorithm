@@ -3,7 +3,7 @@ BIN	 	= bin/
 SRC	 	= src/
 INCLUDES 	= include/
 EXEC	 	= k_means
-THREADS	 	= 1024 
+THREADS	 	= 512
 
 CFLAGS = -O3 -g -std=c++11 -arch=sm_35 -Wno-deprecated-gpu-targets
 
@@ -19,8 +19,6 @@ $(BIN)utils.o: $(SRC)utils.cu $(INCLUDES)utils.h
 clean:
 	rm -r bin/*
 
-runseq:
-	./$(BIN)$(EXEC) 10000000 
+run:
+	./bin/k_means 10000000 $(THREADS)
 
-runpar:
-	./$(BIN)$(EXEC) 10000000 $(THREADS)

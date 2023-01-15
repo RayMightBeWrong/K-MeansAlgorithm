@@ -32,7 +32,8 @@ void stopKernelTime () {
 
 
 int main(int argc, char **argv){
-	chrono::steady_clock::time_point begin = chrono::steady_clock::now();		
+	chrono::steady_clock::time_point begin = chrono::steady_clock::now();
+
 	// N is the number of points 
 	int N = atoi(argv[1]);
 	
@@ -53,8 +54,9 @@ int main(int argc, char **argv){
 	// algorithm executes the k-means algorithm and prints the information out
 	init(N, px, py, cx, cy);
 
-	chrono::steady_clock::time_point end = chrono::steady_clock::now();
+chrono::steady_clock::time_point end = chrono::steady_clock::now();
         cout << endl << "Sequential CPU execution: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " milliseconds" << endl << endl;
+
 	startKernelTime();
 	if (argc == 3){
 		int THREADS = atoi(argv[2]);
